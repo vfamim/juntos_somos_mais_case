@@ -1,6 +1,18 @@
-# Case Técnico Engenheiro de Dados -> Juntos Somos Mais
+# Case Técnico Engenheiro de Dados -> Processamento de pedidos em Real Time
 
-Este projeto foi desenvolvido para a empresa **JUNTOS SOMOS MAIS** e visa implementar um fluxo de dados em tempo real utilizando o **Confluent**, **Apache Kafka** e **Python**. O projeto realiza a leitura de dados de uma tabela chamada **E-commerce Business Transaction** e processa esses dados em real-time.
+Este projeto foi desenvolvido para a empresa **JUNTOS SOMOS MAIS** e visa implementar um fluxo de dados em tempo real utilizando o **Confluent**, **Apache Kafka** e **Python**. 
+O projeto realiza a leitura de dados de uma tabela chamada **E-commerce Business Transaction** e processa esses dados em real-time.
+
+
+```graph TD
+    A[Início: Coleta de Dados - Aplicação de Pedidos] --> B[Producer: Envia dados dos pedidos para Kafka]
+    B --> C[Apache Kafka: Armazena eventos de pedidos em tópicos]
+    C --> D[Consumer: Databricks consumindo eventos de pedidos]
+    D --> E[Databricks: Processa dados com PySpark]
+    E --> F[Azure Data Lake: Armazena dados processados]
+    F --> G[Time de Dados: Acessa dados processados para análise]
+    G --> H[Análises em tempo real: Power BI / Azure Synapse]
+```
 
 ## Contexto
 
@@ -48,187 +60,31 @@ Antes de começar, você precisará instalar e configurar os seguintes component
 - Bibliotecas Python necessárias (veja abaixo como instalar)
 - Uma conta no **Confluent Cloud** ou um ambiente local do Confluent
 
-## Configurando o Confluent CLI
+## Tecnologias Escolhidas
 
-### 1. Instale o Confluent CLI
+**Apache Kafka (Confluent)** 
+Escolhemos o Kafka por sua escalabilidade, alta taxa de throughput e confiabilidade 
+para lidar com eventos em tempo real. A solução gerenciada pela Confluent simplifica
+o gerenciamento e monitoração do Kafka, permitindo à equipe focar no desenvolvimento 
+da solução. Além de contar com inúmeras ferramentas que podem auxiliar na movimentação
+dos dados e governança. É uma solução paga.
 
-Baixe e instale o Confluent CLI seguindo as instruções da [documentação oficial](https://docs.confluent.io/confluent-cli/current/install.html).
+**Python**
+Usamos Python tanto para o producer quanto para o consumer pela simplicidade
+da linguagem e pela vasta integração com bibliotecas de dados, como Kafka, PySpark e 
+serviços da Azure. É Open Source
 
-### 2. Faça login no Confluent Cloud
+**Azure Databricks**
+O Databricks é uma plataforma unificada de análise de dados que permite processamento
+de grandes volumes de dados em tempo real. A escolha do Databricks simplifica o 
+processamento de dados em escala, além de oferecer suporte nativo para PySpark, 
+o que facilita a transformação e a análise.
 
-Se você estiver usando o Confluent Cloud, faça o login com o comando:
-
-```bash
-confluent login
-```
-
-Siga as instruções na tela para autenticar com suas credenciais.
-
-### 3. Crie um Cluster Kafka
-
-Após fazer login, você pode criar um cluster Kafka no Confluent Cloud ou usar um já existente. Para criar um novo cluster:
-
-```bash
-confluent kafka cluster create ecommerce-cluster --cloud aws --region us-east-1
-```
-
-Ou liste seus clusters existentes:
-
-```bash
-confluent kafka cluster list
-```
-
-### 4. Configure o Cluster
-
-Depois de criar ou identificar seu cluster, defina-o como o cluster ativo:
-
-```bash
-confluent kafka cluster use <cluster-id>
-```
-
-### 5. Crie um Tópico Kafka
-
-Crie um tópico Kafka para transmitir as transações de e-commerce:
-
-```bash
-confluent kafka topic create ecommerce-transactions
-```
-
-Você pode verificar se o tópico foi criado com sucesso usando:
-
-```bash
-confluent kafka topic list
-```
-
-### 6. Configuração da API Key
-
-Para se conectar ao cluster Kafka usando seus scripts Python, você precisará de uma **API Key** e **Secret**:
-
-```bash
-confluent api-key create --resource <cluster-id>
-```
-
-Guarde a chave e o segredo fornecidos, pois serão necessários para configurar os Producers e Consumers.
-
-## Estrutura do Projeto
-
-O projeto contém dois scripts principais para o Kafka Producer e o Kafka Consumer.
-
-### 1. **Kafka Producer** (`producer.py`)
-
-Este script é responsável por enviar dados da tabela **E-commerce Business Transaction** para o tópico Kafka em tempo real.
-
-#### Exemplo de execução do `producer.py`:
-
-```bash
-python producer.py
-```
-
-### 2. **Kafka Consumer** (`consumer.py`)
-
-O script do Consumer consome os dados do tópico Kafka e realiza o processamento necessário.
-
-#### Exemplo de execução do `consumer.py`:
-
-```bash
-python consumer.py
-```
-
-## Configuração dos Scripts Python
-
-### Instalação das Dependências
-
-No diretório do projeto, instale as dependências Python utilizando o arquivo `requirements.txt`:
-
-```bash
-pip install -r requirements.txt
-```
-
-**Dependências principais:**
-
-- `confluent-kafka`
-- `json`
-- `time`
-
-### Configurando `producer.py`
-
-No script `producer.py`, você precisará ajustar as configurações do Kafka Producer, incluindo as chaves de API e o endereço do cluster Kafka.
-
-Exemplo de trecho de código no `producer.py`:
-
-```python
-from confluent_kafka import Producer
-import json
-
-config = {
-    'bootstrap.servers': '<bootstrap-server>',
-    'security.protocol': 'SASL_SSL',
-    'sasl.mechanism': 'PLAIN',
-    'sasl.username': '<api-key>',
-    'sasl.password': '<api-secret>',
-}
-
-producer = Producer(config)
-topic = 'ecommerce-transactions'
-
-def delivery_report(err, msg):
-    if err is not None:
-        print(f'Error: {err}')
-    else:
-        print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
-
-# Exemplo de envio de mensagem
-transaction = {"order_id": "12345", "amount": 250, "status": "completed"}
-producer.produce(topic, key=str(transaction["order_id"]), value=json.dumps(transaction), callback=delivery_report)
-producer.flush()
-```
-
-### Configurando `consumer.py`
-
-No script `consumer.py`, ajuste as configurações do Kafka Consumer da mesma forma, utilizando as chaves de API e o endereço do cluster.
-
-Exemplo de trecho de código no `consumer.py`:
-
-```python
-from confluent_kafka import Consumer, KafkaError
-
-config = {
-    'bootstrap.servers': '<bootstrap-server>',
-    'security.protocol': 'SASL_SSL',
-    'sasl.mechanism': 'PLAIN',
-    'sasl.username': '<api-key>',
-    'sasl.password': '<api-secret>',
-    'group.id': 'ecommerce-consumer-group',
-    'auto.offset.reset': 'earliest',
-}
-
-consumer = Consumer(config)
-topic = 'ecommerce-transactions'
-consumer.subscribe([topic])
-
-while True:
-    msg = consumer.poll(1.0)
-    if msg is None:
-        continue
-    if msg.error():
-        if msg.error().code() == KafkaError._PARTITION_EOF:
-            continue
-        else:
-            print(msg.error())
-            break
-    print(f'Received message: {msg.value().decode("utf-8")}')
-consumer.close()
-```
-
-## Executando o Projeto
-
-1. **Inicie o Kafka Producer**:
-   - O Producer lê os dados da tabela "E-commerce Business Transaction" e os envia para o tópico Kafka.
-   - Execute o script `producer.py`.
-
-2. **Inicie o Kafka Consumer**:
-   - O Consumer consome os dados do tópico Kafka e processa os dados em real-time.
-   - Execute o script `consumer.py`.
+**Azure Data Lake**
+Utilizamos o Data Lake como armazenamento final por sua alta escalabilidade
+e capacidade de integração com outras ferramentas da Azure, como Databricks, Synapse Analytics e Power BI.
+Orientamos manter a escolha dos serviços Azure uma vez que o desafio propões
+o uso de Azure Databricks.
 
 ## Conclusão
 
