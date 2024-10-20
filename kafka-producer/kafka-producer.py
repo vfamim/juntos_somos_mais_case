@@ -1,11 +1,12 @@
 from confluent_kafka import Producer
+
 from psycopg2
-from dotenv import load_dotenv
+import json
 import os
 import random
 import time
-import json
 
+from dotenv import load_dotenv
 
 load_dotenv()
 

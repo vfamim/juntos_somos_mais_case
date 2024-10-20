@@ -1,7 +1,8 @@
+import csv
+import os
+
 from confluent_kafka import Consumer, KafkaError
 from dotenv import load_dotenv
-import os
-import csv
 
 load_dotenv()
 

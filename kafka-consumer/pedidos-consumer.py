@@ -71,4 +71,3 @@ for mensagem in consumidor:
 # Fechar o consumidor Kafka
 print("Fechando o consumidor")
 consumidor.close()
-
