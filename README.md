@@ -4,14 +4,15 @@ Este projeto foi desenvolvido para a empresa **JUNTOS SOMOS MAIS** e visa implem
 O projeto realiza a leitura de dados de uma tabela chamada **E-commerce Business Transaction** e processa esses dados em real-time.
 
 
-```graph TD
+```mermaid
+flowchart TD
     A[Início: Coleta de Dados - Aplicação de Pedidos] --> B[Producer: Envia dados dos pedidos para Kafka]
     B --> C[Apache Kafka: Armazena eventos de pedidos em tópicos]
     C --> D[Consumer: Databricks consumindo eventos de pedidos]
-    D --> E[Databricks: Processa dados com PySpark]
+    D --> E[Databricks: Processa dados]
     E --> F[Azure Data Lake: Armazena dados processados]
     F --> G[Time de Dados: Acessa dados processados para análise]
-    G --> H[Análises em tempo real: Power BI / Azure Synapse]
+    G --> H[Análises em tempo real: Power BI]
 ```
 
 ## Contexto
