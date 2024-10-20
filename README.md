@@ -12,7 +12,7 @@ flowchart TD
     D --> E[Databricks: Processa dados]
     E --> F[Azure Data Lake: Armazena dados processados]
     F --> G[Time de Dados: Acessa dados processados para análise]
-    G --> H[Análises em tempo real: Power BI]
+    F --> H[Análises em tempo real: Power BI]
 ```
 
 ## Contexto
