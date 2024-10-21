@@ -1,29 +1,5 @@
 # Case Técnico Engenheiro de Dados -> Processamento de pedidos em Real Time
 
-## Table of Content
-
-- [[#Estrutura de Projeto|Estrutura de Projeto]]
-- [[#Tecnologias Escolhidas|Tecnologias Escolhidas]]
-- [[#Diagrama|Diagrama]]
-- [[#Arquitetura|Arquitetura]]
-- [[#Camada Streaming - Processamento de pedidos|Camada Streaming - Processamento de pedidos]]
-	- [[#Camada Streaming - Processamento de pedidos#Produtores ou Producers|Produtores ou Producers]]
-	- [[#Camada Streaming - Processamento de pedidos#Consumidores ou Consumers|Consumidores ou Consumers]]
-- [[#Camada Azure Cloud - Database|Camada Azure Cloud - Database]]
-	- [[#Camada Azure Cloud - Database#Camada Bronze (Raw Data)|Camada Bronze (Raw Data)]]
-	- [[#Camada Azure Cloud - Database#Camada Silver (Cleaned Data)|Camada Silver (Cleaned Data)]]
-	- [[#Camada Azure Cloud - Database#Camada Gold (Aggregated Data)|Camada Gold (Aggregated Data)]]
-	- [[#Camada Azure Cloud - Database#Orquestrador|Orquestrador]]
-	- [[#Camada Azure Cloud - Database#Deploy|Deploy]]
-- [[#Camada de Consumo|Camada de Consumo]]
-- [[#Implementando o Projeto|Implementando o Projeto]]
-	- [[#Implementando o Projeto#Dados|Dados]]
-	- [[#Implementando o Projeto#Ingestão por Streaming|Ingestão por Streaming]]
-	- [[#Implementando o Projeto#Script Producer|Script Producer]]
-	- [[#Implementando o Projeto#Script Consumer|Script Consumer]]
-	- [[#Implementando o Projeto#Deploy|Deploy]]
-
-
 >"O objetivo desse case é criar um desenho de solução, com passo a passo para orientar um engenheiro de dados desenvolver uma solução de dados real time para a squad de pedidos. O resultado desse desenho deverá orientar as pessoas de dados e da squad com a solução. Esses documentos servirão como insumo para iniciar o desenvolvimento.
 >A squad de produtos hoje conta com um(a) PM e pessoas de engenharia de software. Esse time fará parte da solução, criando o transacional da nossa solução de dados, portanto é necessário desenharmos a solução que contemple eles. Aqui é necessário sugerir uma arquitetura e ferramentas para a Squad, contextualizando tecnicamente e funcionalmente o time. A stack do lado de dados conta com um Databricks na Azure, mas ainda não tem uma solução para dados real time.
 >
