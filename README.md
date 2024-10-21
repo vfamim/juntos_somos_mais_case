@@ -29,13 +29,30 @@ A escolha dessa arquitetura, a depender da escalabilidade do projeto, traz o ben
 
 ## Processamento de pedidos
 
+Nosso processamento se dará como base essa tabela com aqui:
+
+| Campo             | Tipo      | Descrição                                                                                                   |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
+| **TransactionNo** | Categoria | Um identificador único para cada transação. Se o código começar com "C", indica que o pedido foi cancelado. |
+| **Date**          | String    | A data em que a transação foi registrada no sistema.                                                        |
+| **ProductNo**     | Categoria | Código único de cinco ou seis dígitos usado para identificar um produto específico no sistema.              |
+| **Product**       | Categoria | Nome do produto adquirido na transação.                                                                     |
+| **Price**         | Numérico  | Valor unitário do produto em libras esterlinas (£), indicado para cada item comprado.                       |
+| **Quantity**      | Numérico  | Número de unidades do produto compradas. Quantidades negativas representam transações canceladas.           |
+| **CustomerNo**    | Categoria | Identificador único de cinco dígitos atribuído a cada cliente no sistema.                                   |
+| **Country**       | Categoria | O país em que o cliente está localizado no momento da compra.                                               |
+
 O **Apache Kafka**, facilita a ingestão de dados de pedidos em tempo real, a escolha do **Confluent** para esse projeto é a facilidade de uso, gerenciamento e escalabilidade de aplicações de streaming de dados em tempo real. Ela foi criada pelos fundadores do Kafka e conta com um grande arsenal e recursos que podem tornar todo o processamento de dados em algo mais robusto. Ele irá funcionar assim:
 
-- **Produtores** ou **Producers** enviam os dados de cada pedido para um **tópico** no Kafka. Esses dados podem incluir detalhes do pedido, como produtos comprados, valores, e informações do cliente.
-    
-- O Kafka atua como um **broker**, armazenando os pedidos dentro dos tópicos de forma distribuída, garantindo alta disponibilidade e resiliência. Ele permite a ingestão de grandes volumes de dados continuamente e com baixa latência.
-    
-- **Consumidores** ou **Consumers** (como sistemas de análise, bancos de dados, ou pipelines de dados) se inscrevem nos tópicos do Kafka e podem ler os dados em tempo real para processar ou armazenar os pedidos, garantindo que as informações fluam imediatamente para onde são necessárias.
+### Produtores ou Producers
+
+Enviam os dados de cada pedido para um **tópico** chamado `time_pedido` no Kafka. O Kafka atua como um **broker**, armazenando os pedidos dentro dos tópicos de forma distribuída, garantindo alta disponibilidade e resiliência. Ele permite a ingestão de grandes volumes de dados continuamente e com baixa latência. 
+
+Esses dados serão processados em formato JSON que é um formato largamente utilizado em projetos envolvendo dados em tempo real.
+
+### Consumidores ou Consumers
+
+Como sistemas de análise, bancos de dados, ou pipelines de dados, se inscrevem nos tópicos do Kafka e podem ler os dados em tempo real para processar ou armazenar os pedidos, garantindo que as informações fluam imediatamente para onde são necessárias.
 
 ## Database
 ### Camada Bronze (Raw Data)
