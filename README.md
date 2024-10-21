@@ -28,7 +28,6 @@ Os dados que receberemos estão nesse modelo ([https://www.kaggle.com/datasets/
 
 ## Diagrama
 
-
 ![image01](./imgs/somosjuntosmais.jpg)
 
 ## Arquitetura
@@ -76,7 +75,7 @@ Para o consumo dos dados desse projeto, ferramentas como o **Power BI**, que já
 
 ### Dados
 
-Nosso processamento se dará como base essa tabela com aqui:
+Os campos referentes a pedidos enviados pelos producers:
 
 | Campo             | Tipo      | Descrição                                                                                                   |
 | ----------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
