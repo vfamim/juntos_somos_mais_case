@@ -29,7 +29,7 @@ Os dados que receberemos estão nesse modelo ([https://www.kaggle.com/datasets/
 ## Diagrama
 
 
-![image01](imgs/somosjuntosmais.jpeg)
+![image01](./imgs/somosjuntosmais.jpg)
 
 ## Arquitetura
 
