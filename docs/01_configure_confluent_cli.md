@@ -28,14 +28,14 @@
 #### Via Interface Web
 
 - Acesse a aba "Topics" e clique em "Create Topic".
-- Nomeie o tópico como `tecnologias` e mantenha as 6 partições padrão.
+- Nomeie o tópico como `time-pedido` e mantenha as 6 partições padrão.
 
 #### Via CLI
 
 - No terminal, crie o tópico com o comando:
 
     ```bash
-    confluent kafka topic create tecnologias --partitions 6
+    confluent kafka topic create time-pedido --partitions 6
     ```
 
 ### 5. Produzir Mensagens Usando a Interface Web
@@ -98,7 +98,7 @@
     confluent kafka topic list
     ```
 
-- Produza mensagens para o tópico `tecnologias` com o comando:
+- Produza mensagens para o tópico `time-pedido` com o comando:
 
     ```bash
     confluent kafka topic produce time-pedido
@@ -122,7 +122,7 @@
 - Abra um novo terminal e consuma as mensagens do início do tópico:
 
     ```bash
-    confluent kafka topic consume tecnologias --from-beginning
+    confluent kafka topic consume time-pedido --from-beginning
     ```
 
 ### 11. Verificar Mensagens no Console Web
