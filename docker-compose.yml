@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  producer:
+    build: ./kafka-producer
+    environment:
+      - BOOTSTRAP_SERVERS=${BOOTSTRAP_SERVERS}
+      - SASL_USERNAME=${SASL_USERNAME}
+      - SASL_PASSWORD=${SASL_PASSWORD}
+      - TOPIC_NAME=${TOPIC_NAME}
+      - PRODUCER_ID=${PRODUCER_ID}
+    deploy:
+      replicas: 3
+
+  consumer:
+    build: ./kafka-consumer
+    environment:
+      - BOOTSTRAP_SERVERS=${BOOTSTRAP_SERVERS}
+      - SASL_USERNAME=${SASL_USERNAME}
+      - SASL_PASSWORD=${SASL_PASSWORD}
+      - TOPIC_NAME=${TOPIC_NAME}
+    volumes:
+      - ./data:/app/data

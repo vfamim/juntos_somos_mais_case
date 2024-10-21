@@ -1,26 +1,12 @@
+import time
+import random
 from confluent_kafka import Producer
-
-from psycopg2
+import uuid
+from faker import Faker
 import json
 import os
-import random
-import time
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-conf = {
-    "bootstrap.servers": os.getenv("BOOTSTRAP_SERVERS"),
-    "sasl.mechanisms": "PLAIN",
-    "security.protocol": "SASL_SSL",
-    "sasl.username": os.getenv("SASL_USERNAME"),
-    "sasl.password": os.getenv("SASL_PASSWORD"),
-    "client.id": os.getenv("CLIENT_ID"),
-}
-
-producer = Producer(**conf)
+fake = Faker("en_GB")
 
 
 def delivery_report(err, msg):
@@ -30,49 +16,69 @@ def delivery_report(err, msg):
         print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
 
-topic = os.getenv("TOPIC")
+# Producer configuration
+producer_conf = {
+    "bootstrap.servers": os.environ["BOOTSTRAP_SERVERS"],
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanisms": "PLAIN",
+    "sasl.username": os.environ["SASL_USERNAME"],
+    "sasl.password": os.environ["SASL_PASSWORD"],
+}
 
-def get_data_from_postgres():
-    try:
-        conn = psycopg2.connect(
-            dbname="seu_banco",
-            user="seu_usuario",
-            password="sua_senha",
-            host="localhost",
-            port="5432"
-        )
-        cursor = conn.cursor()
 
-        query = "SELECT id, nome, valor FROM sua_tabela"
-        cursor.execute(query)
+def generate_unique_id():
+    return int(str(uuid.uuid4().int)[:8])
 
-        rows = cursor.fetchall()
-        return rows
 
-    except Exception as e:
-        print(f"Erro ao conectar no PostgreSQL: {e}")
-        return []
+producer = Producer(producer_conf)
 
-def produce_data_to_kafka():
-    data = get_data_from_postgres()
 
-    for row in data:
-        message = {
-            'id': row[0],
-            'nome': row[1],
-            'valor': row[2]
-        }
+def generate_initial_data(transaction_id):
+    date = fake.date_this_year()  # Random date within this year
+    product_no = random.randint(10000, 999999)  # Product number between 5-6 digits
+    product_name = fake.word().capitalize()  # Random product name
+    price = round(random.uniform(5.0, 100.0), 2)  # Price in GBP
+    quantity = random.randint(1, 5)  # Quantity of product
+    customer_no = random.randint(10000, 99999)  # Customer number (5 digits)
+    country = fake.country()  # Country name
 
-        producer.produce(
-            'meu_topico',
-            key=str(row[0]),
-            value=json.dumps(message),
-            callback=delivery_report
-        )
+    transaction_type = (
+        "C" if random.random() < 0.1 else ""
+    )  # 10% chance for cancelled transaction
 
-        producer.poll(0)
+    data = {
+        "TransactionNo": f"{transaction_id}{transaction_type}",
+        "Date": date,
+        "ProductNo": product_no,
+        "Product": product_name,
+        "Price": price,
+        "Quantity": quantity,
+        "CustomerNo": customer_no,
+        "Country": country,
+    }
 
-    producer.flush()
+    if transaction_type == "C":
+        data["Quantity"] = -quantity  # Negative quantity for cancelled transactions
+
+    return data
+
 
 if __name__ == "__main__":
-    produce_data_to_kafka()
+    producer_id = generate_unique_id()
+    initial_data = generate_initial_data(producer_id)
+
+    while True:
+        # Generate data for a transaction
+        transaction_data = initial_data.copy()
+
+        # Produce message to Kafka
+        producer.produce(
+            "time_pedido",
+            key=str(producer_id),
+            value=json.dumps(transaction_data),
+            callback=delivery_report,
+        )
+        producer.poll(1)
+
+        # Wait for 5 seconds before generating the next transaction
+        time.sleep(5)

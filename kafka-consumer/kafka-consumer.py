@@ -1,56 +1,79 @@
-import csv
-import os
-
+import time
+import random
 from confluent_kafka import Consumer, KafkaError
-from dotenv import load_dotenv
+import json
+import os
+import pandas as pd
+from sqlalchemy import create_engine
+from datetime import datetime
 
-load_dotenv()
-
-conf = {
-    "bootstrap.servers": os.getenv("BOOTSTRAP_SERVERS"),
-    "sasl.mechanisms": "PLAIN",
+# Consumer configuration
+consumer_conf = {
+    "bootstrap.servers": os.environ["BOOTSTRAP_SERVERS"],
     "security.protocol": "SASL_SSL",
-    "sasl.username": os.getenv("SASL_USERNAME"),
-    "sasl.password": os.getenv("SASL_PASSWORD"),
-    "group.id": "novo-python-consumer-group",
+    "sasl.mechanisms": "PLAIN",
+    "sasl.username": os.environ["SASL_USERNAME"],
+    "sasl.password": os.environ["SASL_PASSWORD"],
+    "group.id": "transactions-consumer-group",
     "auto.offset.reset": "earliest",
 }
 
-consumer = Consumer(**conf)
+consumer = Consumer(consumer_conf)
+consumer.subscribe(["transactions-topic"])
 
-topic = os.getenv("TOPIC_PRODUCER")
-consumer.subscribe([topic])
+# PostgreSQL configuration
+db_url = f"{os.environ['DB_URL']}"
+engine = create_engine(db_url)
 
 
 def consume_messages():
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Diretório do script atual
-    csv_file = os.path.join(
-        script_dir, "messages.csv"
-    )  # Caminho completo para o arquivo CSV
+    batch_size = 100  # Number of messages to process per batch
+    batch_interval = 5  # Time interval (in seconds) between batches
+    messages = []
+    start_time = time.time()  # Initialize start_time inside the function
 
-    with open(csv_file, mode="w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Key", "Value"])  # Escrever cabeçalho no CSV
+    try:
+        while True:
+            msg = consumer.poll(1.0)  # Wait for up to 1 second for a new message
+            if msg is None:
+                continue
+            if msg.error():
+                continue
 
-        try:
-            while True:
-                msg = consumer.poll(1.0)  # Espera até 1 segundo por uma nova mensagem
-                # Exibe a mensagem recebida
-                if msg is None:  # Se nenhuma mensagem foi recebida
-                    continue
-                if msg.error():  # Se houve um erro ao receber a mensagem
-                    continue
-                key = msg.key().decode("utf-8")
-                value = msg.value().decode("utf-8")
-                print(f"Received message: Key: {key}, Value: {value}")
-                # Escreve a mensagem no CSV
-                writer.writerow([key, value])
-        except KeyboardInterrupt:
-            pass
-        finally:
-            print("Closing consumer.")
-            consumer.close()
+            value = json.loads(
+                msg.value().decode("utf-8")
+            )  # Decode the message value to JSON
+            # Denormalize the message
+            data = {
+                "TransactionNo": value["TransactionNo"],
+                "Date": value["Date"],
+                "ProductNo": value["ProductNo"],
+                "Product": value["Product"],
+                "Price": value["Price"],
+                "Quantity": value["Quantity"],
+                "CustomerNo": value["CustomerNo"],
+                "Country": value["Country"],
+                "Time": datetime.now(),  # Capture the current timestamp of the message
+            }
+            messages.append(data)
+
+            # Process the batch when it reaches the size or the time interval
+            if (
+                len(messages) >= batch_size
+                or (time.time() - start_time) >= batch_interval
+            ):
+                df = pd.DataFrame(messages)
+                df.to_sql("transaction_data", engine, if_exists="append", index=False)
+                messages = []  # Clear the message list after saving to the database
+                start_time = time.time()  # Reset the time counter
+
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print("Closing consumer.")
+        consumer.close()
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     consume_messages()
