@@ -130,5 +130,5 @@ Este código é um consumidor Kafka que lê mensagens de transações do tópico
 
 ### Deploy
 
-Para o deploy deste projeto basta utilizar preencher todas as variáveis de ambiente e executar o `docker-compose.yml`.
+Para o deploy deste projeto basta preencher todas as variáveis de ambiente e executar o `docker-compose.yml`. Lembrando que é necessário configurar o Confluent Cloud ou Confluent CLI.
 
