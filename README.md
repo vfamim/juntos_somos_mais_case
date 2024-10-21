@@ -111,6 +111,7 @@ Para o consumo dos dados desse projeto, ferramentas como o **Power BI**, que já
 
 Nesta etapa optei por dar foco na ingestão de dados, utilizando algumas ferramentas disponibilizadas pelo **Confluent** para fazer o **Producer** e o **Consumer**. 
 Para a camada da Azure Cloud, podemos utilizar os notebooks do **Databricks** com o uso de Spark para fazer toda a movimentação, limpeza e transformação dos dados entre as camadas de *Medalhão*.
+Outro detalhe é que, inicialmente, considerando que estamos em estágio de desenvolvimento (DEV), os dados gerados serão armazenados em um banco de dados PostgreSQL. Nos testes utilizei o [Render](https://render.com/), uma plataforma que permite criar uma *Virtual Machine* com banco de dados gratuito, excelente para testes.
 
 ### Dados
 
@@ -130,7 +131,6 @@ Os campos referentes a pedidos enviados pelos Kafka-Produtores:
 ### Ingestão por Streaming
 
 Para este projeto, o script escolhido foi a criação do Producer `kafka-producer.py` e Consumer  `kafka-consumer.py`, ambos os scripts utilizam a biblioteca do **Confluent**, sendo assim necessário a configuração de um ambiente para desenvolvimento. Para isso existe um guia para implementar algumas configurações necessárias neste arquivo aqui: [Confluent](./docs/01_configure_confluent_cli.md).
-Outro detalhe é que inicialmente, considerando que estamos em estágio de desenvolvimento (DEV), os dados gerados serão armazenados em um banco de dados PostgreSQL, nos testes utilizei o [Render](https://render.com/), uma plataforma que permite criar uma *Virtual Machine* para testes totalmente grátis.
 
 ### Script Producer
 
