@@ -74,17 +74,23 @@ Esta etapa também ficará responsável pelo particionamento e monitoramento, al
 
 Um consumidor no Kafka  é responsável pela leitura das mensagens de **tópicos** específicos. Aqui é o processo de deserialização, retornando os dados em um formato adequado para nosso ambiente de armazenamento.
 
-## Camada Azure Cloud - Database
+### Integração com Azure
 
-### Camada Bronze (Raw Data)
+Uma das vantagens da escolha do **Confluent** como nossa plataforma Kafka para streaming são seus diversos conectores que facilita toda a nossa integração. No exemplo em questão, queremos movimentar nossos dados para o **Azure Blob Storage**, o que podemos fazer facilmente através do [Azure Blob Storage Sink Connector for Confluent Platform](https://docs.confluent.io/kafka-connectors/azure-blob-storage-sink/current/overview.html). Futuramente podemos escalonar nossas conexões para outras fontes caso seja necessário.
+
+## Camada Azure Cloud 
+
+### Database
+
+#### Camada Bronze (Raw Data)
 
 Essa camada é armazenada no [Blob Storage](https://azure.microsoft.com/pt-br/products/storage/blobs/) e recebe os dados brutos diretamente das fontes, como logs de transações de vendas, interações de usuários no site e inventário de produtos, etc. Os dados chegam de forma não processada, sem transformação, preservando o histórico completo e podendo conter inconsistências ou duplicidades. Seu objetivo é servir como um backup fiel da origem dos dados.
 
-### Camada Silver (Cleaned Data)
+#### Camada Silver (Cleaned Data)
 
 A camada **Silver** aplica transformações iniciais nos dados da camada Bronze. Aqui, os dados são limpos, filtrados e padronizados para remover duplicatas e inconsistências. Essa camada traz os dados em um formato mais organizado e pronto para análise de operações diárias, como análises de comportamento de compra, tendências de vendas, e criação de relatórios operacionais. Ela mantém a granularidade dos dados, permitindo consultas mais rápidas. A ferrramenta escolhida para essa etapa são as [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/) e [Delta Live Tables](https://docs.databricks.com/pt/delta-live-tables/index.html),  que já são ferramentas que integram o próprio DataBricks, além de utilizarem propriedades ACID.
 
-### Camada Gold (Aggregated Data)
+#### Camada Gold (Aggregated Data)
 
 Na camada **Gold**, também baseada no [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/) e [Delta Live Tables](https://docs.databricks.com/pt/delta-live-tables/index.html), os dados são otimizados e agregados para análise avançada e geração de insights estratégicos. Informações como relatórios financeiros, métricas de performance de vendas, análises de marketing e personalização de ofertas são derivadas desta camada. Ela oferece dados sumarizados e preparados para consumo por times de negócio ou modelos de machine learning, focando em performance e tomada de decisão.
 
@@ -100,6 +106,7 @@ Selecionamos o Docker para fazer o deploy deste projeto, uma vez que um ambiente
 
 Para o consumo dos dados desse projeto, ferramentas como o **Power BI**, que já possuem integração nativa com o **Azure**, são uma ótima escolha para análise e visualização em tempo real. O Power BI pode se conectar diretamente ao **Azure Data Lake**, **Azure Synapse Analytics**, ou **Delta Lake**, e permitir que você consuma os dados processados pela pipeline em tempo real ou com atualizações agendadas.
 
+---
 ## Implementando o Projeto
 
 ### Dados
@@ -132,4 +139,3 @@ Este código é um consumidor Kafka que lê mensagens de transações do tópico
 ### Deploy
 
 Para o deploy deste projeto basta preencher todas as variáveis de ambiente e executar o `docker-compose.yml`. Lembrando que é necessário configurar o Confluent Cloud ou Confluent CLI.
-
