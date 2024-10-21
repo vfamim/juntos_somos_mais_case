@@ -6,6 +6,27 @@ Os dados que receberemos estão nesse modelo ([https://www.kaggle.com/datasets/
 >É necessário também desenvolver um trecho de código para servir de exemplo para os engenheiros de software e de dados. Aqui, deixamos a sua escolha qual parte do código deseja construir para servir de exemplo. Podemos utilizar, Python, Pyspark, Sql e/ou Scala. Precisamos também explicar os motivadores para a escolha de tecnologia.
 >Para documentar essa solução utilize uma ferramenta como [Draw.io](http://draw.io/), Miro ou excalidraw e para o código, utilize o github."
 
+## Estrutura de Projeto
+
+```bash
+.
+├── docker-compose.yml          # Arquivo de configuração Docker Compose
+├── docs                        # Diretório destinado à documentação do projeto.
+│   └── 01_configure_confluent_cli.md  # Documento explicando como configurar o Confluent CLI, usado para gerenciar Kafka.
+├── imgs                        # Diretório para armazenar imagens usadas na documentação ou outros fins.
+│   └── somosjuntosmais.jpg     # Diagrama do projeto
+├── kafka-consumer              # Consumidor Kafka.
+│   ├── Dockerfile              # Dockerfile para construir a imagem do Kafka consumer.
+│   └── kafka-consumer.py       # Script Python que consome mensagens do Kafka.
+├── kafka-producer              # Produtor Kafka.
+│   ├── Dockerfile              # Dockerfile para construir a imagem do Kafka producer.
+│   └── kafka-producer.py       # Script Python que envia mensagens ao Kafka.
+├── pyproject.toml              # Arquivo de configuração de dependências e metadados do projeto Python (compatível com Poetry).
+├── README.md                   # Arquivo README, contendo informações gerais sobre o projeto.
+└── uv.lock                     # Arquivo de lock do UV (pip install uv), gerenciando versões das dependências.
+
+```
+
 ## Tecnologias Escolhidas
 
 - [**Spark**](https://spark.apache.org/): É uma ferramenta para processar grandes volumes de dados de forma rápida, pois trabalha com dados em memória. Suporta várias linguagens e é ideal para análise de dados, machine learning e processamento em tempo real.
