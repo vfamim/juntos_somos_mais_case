@@ -1,9 +1,36 @@
 # Case Técnico Engenheiro de Dados -> Processamento de pedidos em Real Time
 
+## Table of Content
+
+- [[#Estrutura de Projeto|Estrutura de Projeto]]
+- [[#Tecnologias Escolhidas|Tecnologias Escolhidas]]
+- [[#Diagrama|Diagrama]]
+- [[#Arquitetura|Arquitetura]]
+- [[#Camada Streaming - Processamento de pedidos|Camada Streaming - Processamento de pedidos]]
+	- [[#Camada Streaming - Processamento de pedidos#Produtores ou Producers|Produtores ou Producers]]
+	- [[#Camada Streaming - Processamento de pedidos#Consumidores ou Consumers|Consumidores ou Consumers]]
+- [[#Camada Azure Cloud - Database|Camada Azure Cloud - Database]]
+	- [[#Camada Azure Cloud - Database#Camada Bronze (Raw Data)|Camada Bronze (Raw Data)]]
+	- [[#Camada Azure Cloud - Database#Camada Silver (Cleaned Data)|Camada Silver (Cleaned Data)]]
+	- [[#Camada Azure Cloud - Database#Camada Gold (Aggregated Data)|Camada Gold (Aggregated Data)]]
+	- [[#Camada Azure Cloud - Database#Orquestrador|Orquestrador]]
+	- [[#Camada Azure Cloud - Database#Deploy|Deploy]]
+- [[#Camada de Consumo|Camada de Consumo]]
+- [[#Implementando o Projeto|Implementando o Projeto]]
+	- [[#Implementando o Projeto#Dados|Dados]]
+	- [[#Implementando o Projeto#Ingestão por Streaming|Ingestão por Streaming]]
+	- [[#Implementando o Projeto#Script Producer|Script Producer]]
+	- [[#Implementando o Projeto#Script Consumer|Script Consumer]]
+	- [[#Implementando o Projeto#Deploy|Deploy]]
+
+
 >"O objetivo desse case é criar um desenho de solução, com passo a passo para orientar um engenheiro de dados desenvolver uma solução de dados real time para a squad de pedidos. O resultado desse desenho deverá orientar as pessoas de dados e da squad com a solução. Esses documentos servirão como insumo para iniciar o desenvolvimento.
 >A squad de produtos hoje conta com um(a) PM e pessoas de engenharia de software. Esse time fará parte da solução, criando o transacional da nossa solução de dados, portanto é necessário desenharmos a solução que contemple eles. Aqui é necessário sugerir uma arquitetura e ferramentas para a Squad, contextualizando tecnicamente e funcionalmente o time. A stack do lado de dados conta com um Databricks na Azure, mas ainda não tem uma solução para dados real time.
+>
 Os dados que receberemos estão nesse modelo ([https://www.kaggle.com/datasets/gabrielramos87/an-online-shop-business](https://www.kaggle.com/datasets/gabrielramos87/an-online-shop-business))
+
 >É necessário também desenvolver um trecho de código para servir de exemplo para os engenheiros de software e de dados. Aqui, deixamos a sua escolha qual parte do código deseja construir para servir de exemplo. Podemos utilizar, Python, Pyspark, Sql e/ou Scala. Precisamos também explicar os motivadores para a escolha de tecnologia.
+>
 >Para documentar essa solução utilize uma ferramenta como [Draw.io](http://draw.io/), Miro ou excalidraw e para o código, utilize o github."
 
 ## Estrutura de Projeto
@@ -57,38 +84,42 @@ Para a este projeto iremos implementar um **Data Lakehouse**. A ideia é termos 
 Um ponto importante para a escolha dessa arquitetura, é a probabilidade de podermos escalar futuramente para um **Data Mesh**, que é muito similar a um Data Lakehouse porém dividido em domínios, como: area de vendas, marketing, finanças, estratégia etc. 
 Outra estratégia adotada é manter grande parte das ferramentas e serviços da Azure, uma vez que o time de dados atua com Azure Databricks, facilitando a integração e o escalonamento do projeto. 
 
-## Processamento de pedidos
+## Camada Streaming - Processamento de pedidos
 
-O **Apache Kafka**, facilita a ingestão de dados de pedidos em tempo real, a escolha do **Confluent** para esse projeto é a facilidade de uso, gerenciamento e escalabilidade de aplicações de streaming de dados em tempo real. Ela foi criada pelos fundadores do Kafka e conta com um grande arsenal e recursos que podem tornar todo o processamento de dados em algo mais robusto. Ele irá funcionar assim:
+Para o processamento dos pedidos em tempo real utilizaremos o **Apache Kafka**, para gerenciar essa atividade utilizaremos o **Confluent** porque traz facilidade de uso, gerenciamento e escalabilidade de aplicações de streaming. Ela foi criada pelos fundadores do Kafka e conta com um grande arsenal e recursos que podem tornar todo o processamento de dados em algo mais robusto. Ele irá funcionar assim:
 
 ### Produtores ou Producers
 
-Um produtor no Kafka é o componente responsável por enviar os dados de cada pedido para um **tópico** chamado `time_pedido`. Nesta etapa faremos a serialização das mensagens para o formato de JSON, largamente utilizado em projetos envolvendo dados em tempo real.
-Esta etapa também ficará responsável pelo particionamento e monitoramento.
+Um produtor no Kafka é o componente responsável por enviar os dados de cada pedido para um **tópico** que iremos chamar de `time_pedido`. Nesta etapa faremos a serialização das mensagens para o formato de JSON, largamente utilizado em projetos envolvendo dados em tempo real.
+Esta etapa também ficará responsável pelo particionamento e monitoramento, além de que será necessário selecionar a quantidade de Produtores para este projeto.
 
 ### Consumidores ou Consumers
 
-Um consumidor no Kafka  é responsável pela leitura das mensagens de **tópicos** específicos. Aqui é o processo de deserialização, retornando os dados em um formato adequado para nosso data lakehouse.
+Um consumidor no Kafka  é responsável pela leitura das mensagens de **tópicos** específicos. Aqui é o processo de deserialização, retornando os dados em um formato adequado para nosso ambiente de armazenamento.
 
-## Database
+## Camada Azure Cloud - Database
 
 ### Camada Bronze (Raw Data)
 
-Essa camada é armazenada no [Blob Storage](https://azure.microsoft.com/pt-br/products/storage/blobs/) e recebe os dados brutos diretamente das fontes, como logs de transações de vendas, interações de usuários no site e inventário de produtos. Os dados chegam de forma não processada, sem transformação, preservando o histórico completo e podendo conter inconsistências ou duplicidades. Seu objetivo é servir como um backup fiel da origem dos dados.
+Essa camada é armazenada no [Blob Storage](https://azure.microsoft.com/pt-br/products/storage/blobs/) e recebe os dados brutos diretamente das fontes, como logs de transações de vendas, interações de usuários no site e inventário de produtos, etc. Os dados chegam de forma não processada, sem transformação, preservando o histórico completo e podendo conter inconsistências ou duplicidades. Seu objetivo é servir como um backup fiel da origem dos dados.
 
 ### Camada Silver (Cleaned Data)
 
-Utilizando o [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/) e [Delta Live Tables](https://docs.databricks.com/pt/delta-live-tables/index.html), a camada **Silver** aplica transformações iniciais nos dados da camada Bronze. Aqui, os dados são limpos, filtrados e padronizados para remover duplicatas e inconsistências. Essa camada traz os dados em um formato mais organizado e pronto para análise de operações diárias, como análises de comportamento de compra, tendências de vendas, e criação de relatórios operacionais. Ela mantém a granularidade dos dados, permitindo consultas mais rápidas.
+A camada **Silver** aplica transformações iniciais nos dados da camada Bronze. Aqui, os dados são limpos, filtrados e padronizados para remover duplicatas e inconsistências. Essa camada traz os dados em um formato mais organizado e pronto para análise de operações diárias, como análises de comportamento de compra, tendências de vendas, e criação de relatórios operacionais. Ela mantém a granularidade dos dados, permitindo consultas mais rápidas. A ferrramenta escolhida para essa etapa são as [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/) e [Delta Live Tables](https://docs.databricks.com/pt/delta-live-tables/index.html),  que já são ferramentas que integram o próprio DataBricks, além de utilizarem propriedades ACID.
 
 ### Camada Gold (Aggregated Data)
 
 Na camada **Gold**, também baseada no [Delta Lake](https://learn.microsoft.com/en-us/azure/databricks/delta/) e [Delta Live Tables](https://docs.databricks.com/pt/delta-live-tables/index.html), os dados são otimizados e agregados para análise avançada e geração de insights estratégicos. Informações como relatórios financeiros, métricas de performance de vendas, análises de marketing e personalização de ofertas são derivadas desta camada. Ela oferece dados sumarizados e preparados para consumo por times de negócio ou modelos de machine learning, focando em performance e tomada de decisão.
 
-## Orquestrador
+### Orquestrador
 
 A ferramenta escolhida para o orquestramento é o **Apache Airflow**, que gerencia workflows por meio de DAGs (Grafos Acíclicos Dirigidos) escritas em Python. Essas DAGs são facilmente escaláveis à medida que o volume de dados, tarefas e workflows cresce. Além disso, o Airflow oferece vantagens mesmo em soluções em tempo real, pois facilita o gerenciamento de dependências, permite configurar políticas de **retry** e agendamentos complexos, e integra-se facilmente com outras ferramentas, como **Databricks** e **Kafka**.
 
-## Consumo de dados
+### Deploy
+
+Selecionamos o Docker para fazer o deploy deste projeto, uma vez que um ambiente containerizado facilita o desenvolvimento e a integração de dados em streaming. A ideia é criarmos inicialmente um ambiente de desenvolvimento que depois de pronto possa migrar facilmente para produção.
+
+## Camada de Consumo
 
 Para o consumo dos dados desse projeto, ferramentas como o **Power BI**, que já possuem integração nativa com o **Azure**, são uma ótima escolha para análise e visualização em tempo real. O Power BI pode se conectar diretamente ao **Azure Data Lake**, **Azure Synapse Analytics**, ou **Delta Lake**, e permitir que você consuma os dados processados pela pipeline em tempo real ou com atualizações agendadas.
 
@@ -96,7 +127,7 @@ Para o consumo dos dados desse projeto, ferramentas como o **Power BI**, que já
 
 ### Dados
 
-Os campos referentes a pedidos enviados pelos producers:
+Os campos referentes a pedidos enviados pelos Kafka-Produtores:
 
 | Campo             | Tipo      | Descrição                                                                                                   |
 | ----------------- | --------- | ----------------------------------------------------------------------------------------------------------- |
@@ -115,7 +146,7 @@ Para este projeto, o script escolhido foi a criação do Producer `kafka-produce
 
 ### Script Producer
 
-Este código é um produtor Kafka que gera e envia mensagens de dados de transações para um tópico Kafka chamado `time_pedido`. Ele simula transações com detalhes gerados aleatoriamente, como número do produto, nome do produto, preço, quantidade, número do cliente e país, utilizando a biblioteca `Faker`. Um ID de transação único é atribuído a cada mensagem, e há uma chance de 10% de que a transação seja marcada como cancelada, indicada por quantidades negativas. Os dados são serializados em formato JSON e enviados para o Kafka. O produtor gera e envia continuamente uma nova transação a cada 5 segundos, e uma função de callback é usada para relatar o sucesso ou falha na entrega da mensagem.
+Este código é um produtor Kafka que gera e envia mensagens de dados de transações para um tópico Kafka chamado `time_pedido`. Ele simula transações com detalhes gerados aleatoriamente, como número do produto, nome do produto, preço, quantidade, número do cliente e país, utilizando a biblioteca `Faker`. Um ID de transação único é atribuído a cada mensagem, e há uma chance de 10% de que a transação seja marcada como cancelada, indicada por quantidades negativas. Os dados são serializados em formato JSON e enviados para o Kafka. O produtor gera e envia continuamente uma nova transação a cada 5 segundos, e uma função de callback é usada para relatar o sucesso ou falha na entrega da mensagem. A ideia é apresentar como os dados são produzidos via streaming e armazenados.
 
 ### Script Consumer
 
@@ -124,3 +155,4 @@ Este código é um consumidor Kafka que lê mensagens de transações do tópico
 ### Deploy
 
 Para o deploy deste projeto basta utilizar preencher todas as variáveis de ambiente e executar o `docker-compose.yml`.
+
