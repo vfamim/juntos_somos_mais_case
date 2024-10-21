@@ -1,61 +1,151 @@
-## Configurando o Confluent CLI
+# Configurando o Confluent CLI
 
-### 1. Instale o Confluent CLI
+## Pré-requisitos
 
-Baixe e instale o Confluent CLI seguindo as instruções da [documentação oficial](https://docs.confluent.io/confluent-cli/current/install.html).
+1. **Confluent Cloud Cluster:** Tenha o cluster e o CLI do Confluent Cloud configurados como indicado nos exercícios anteriores.
+2. **Kafka CLI:** Certifique-se de ter o Kafka CLI instalado e conectado ao cluster no Confluent Cloud.
 
-### 2. Faça login no Confluent Cloud
+## Etapas do Exercício
 
-Se você estiver usando o Confluent Cloud, faça o login com o comando:
+### 1. Criar Conta no Confluent Cloud
 
-```bash
-confluent login
+- Acesse o site [Confluent Cloud](https://confluent.cloud/).
+- Preencha os campos com nome, email e senha.
+- Clique em "Start Free" e confirme seu email para finalizar o cadastro.
+
+### 2. Configurar o Cluster
+
+- Após confirmar o email, siga os passos de configuração.
+- Escolha o **cluster básico** para o exercício.
+
+### 3. Aplicar Código Promocional
+
+- No painel, vá até "Settings" > "Billing and Payment".
+- Insira o código `kafka101` para receber $101 de créditos.
+
+### 4. Criar um Tópico
+
+#### Via Interface Web
+
+- Acesse a aba "Topics" e clique em "Create Topic".
+- Nomeie o tópico como `tecnologias` e mantenha as 6 partições padrão.
+
+#### Via CLI
+
+- No terminal, crie o tópico com o comando:
+
+    ```bash
+    confluent kafka topic create tecnologias --partitions 6
+    ```
+
+### 5. Produzir Mensagens Usando a Interface Web
+
+- Na aba "Messages", clique em "Produce a new message to this topic".
+- Insira `1` como chave e `Python` como valor, e clique em "Produce".
+
+### 6. Configurar o CLI
+
+- Baixe e configure o CLI a partir da seção "CLI and Tools" no Confluent Cloud.
+- No terminal, faça login com:
+
+    ```bash
+    confluent login --save
+    ```
+
+- Utilize o mesmo email e senha cadastrados anteriormente.
+
+### 7. Escolher Ambiente e Cluster
+
+- Liste os ambientes disponíveis com:
+
+    ```bash
+    confluent environment list
+    ```
+
+- Selecione o ambiente desejado:
+
+    ```bash
+    confluent environment use <environment_id>
+    ```
+
+- Liste e escolha o cluster Kafka:
+
+    ```bash
+    confluent kafka cluster list
+    confluent kafka cluster use <cluster_id>
+    ```
+
+### 8. Gerar e Configurar Chave da API
+
+- Crie uma chave de API:
+
+    ```bash
+    confluent api-key create --resource <cluster_id>
+    ```
+
+- Guarde a chave e o segredo gerados.
+- Configure a chave para uso:
+
+    ```bash
+    confluent api-key use <api_key> --resource <cluster_id>
+    ```
+
+### 9. Produzir Mensagens Usando o CLI
+
+- Liste os tópicos disponíveis:
+
+    ```bash
+    confluent kafka topic list
+    ```
+
+- Produza mensagens para o tópico `tecnologias` com o comando:
+
+    ```bash
+    confluent kafka topic produce time-pedido
+    ```
+
+- Insira as mensagens uma a uma no formato `chave:valor`:
+
+    ```
+    1:Python
+    2:SQL
+    3:Kafka
+    4:Spark
+    5:Airflow
+    6:Kubernetes
+    7:Terraform
+    8:Docker
+    ```
+
+### 10. Consumir Mensagens Usando o CLI
+
+- Abra um novo terminal e consuma as mensagens do início do tópico:
+
+    ```bash
+    confluent kafka topic consume tecnologias --from-beginning
+    ```
+
+### 11. Verificar Mensagens no Console Web
+
+- Retorne à interface web do Confluent Cloud e confira as mensagens enviadas.
+- Para visualização detalhada, ajuste o offset para zero e analise as partições.
+
+
+---
+
+### Diagrama de Fluxo
+
+```mermaid
+graph TD;
+    A[Criar Conta no Confluent Cloud] --> B[Configurar Cluster]
+    B --> C[Aplicar Código Promocional]
+    C --> D[Criar Tópico]
+    D --> E["Produzir Mensagens"]
+    E --> F[Configurar CLI]
+    F --> G[Selecionar Ambiente e Cluster]
+    G --> H[Criar e Configurar Chave da API]
+    H --> I["Produzir Mensagens"]
+    I --> J["Consumir Mensagens"]
+    J --> K[Verificar Mensagens]
 ```
 
-Siga as instruções na tela para autenticar com suas credenciais.
-
-### 3. Crie um Cluster Kafka
-
-Após fazer login, você pode criar um cluster Kafka no Confluent Cloud ou usar um já existente. Para criar um novo cluster:
-
-```bash
-confluent kafka cluster create ecommerce-cluster --cloud aws --region us-east-1
-```
-
-Ou liste seus clusters existentes:
-
-```bash
-confluent kafka cluster list
-```
-
-### 4. Configure o Cluster
-
-Depois de criar ou identificar seu cluster, defina-o como o cluster ativo:
-
-```bash
-confluent kafka cluster use <cluster-id>
-```
-
-### 5. Crie um Tópico Kafka
-
-Crie um tópico Kafka para transmitir as transações de e-commerce:
-
-```bash
-confluent kafka topic create ecommerce-transactions
-```
-
-Você pode verificar se o tópico foi criado com sucesso usando:
-
-```bash
-confluent kafka topic list
-```
-
-### 6. Configuração da API Key
-
-Para se conectar ao cluster Kafka usando seus scripts Python, você precisará de uma **API Key** e **Secret**:
-
-```bash
-confluent api-key create --resource <cluster-id>
-```
-
-Guarde a chave e o segredo fornecidos, pois serão necessários para configurar os Producers e Consumers.
